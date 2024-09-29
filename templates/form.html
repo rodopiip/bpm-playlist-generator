@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Playlist</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles/form.css') }}">
+</head>
+<body>
+<div class="form-container">
+    <h2>Generate a BPM-based Spotify playlist</h2>
+    <form action="/generate_playlist" method="POST">
+        <div class="form-group">
+            <label for="genre">Genre</label>
+            <input type="text" id="genre" name="genre" placeholder="List of genre seeds (e.g. pop, rock, jazz)"  required>
+        </div>
+        <div class="form-group">
+            <label for="min_tempo">Min Tempo (BPM)</label>
+            <input type="number" id="min_tempo" name="min_tempo" placeholder="Enter min tempo (e.g. 80)" required>
+        </div>
+        <div class="form-group">
+            <label for="max_tempo">Max Tempo (BPM)</label>
+            <input type="number" id="max_tempo" name="max_tempo" placeholder="Enter max tempo (e.g. 150)" required>
+        </div>
+        <div class="form-group">
+            <label for="target_tempo">Target Tempo (BPM)</label>
+            <input type="number" id="target_tempo" name="target_tempo" placeholder="Enter target tempo (e.g. 120)" required>
+        </div>
+        <div class="form-group">
+            <label for="max_num_songs">Maximum number of songs</label>
+            <input type="number" id="max_num_songs" name="max_num_songs" placeholder="Enter maximum number of songs (e.g. 10)" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Generate Playlist</button>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>
