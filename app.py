@@ -106,7 +106,7 @@ def generate_playlist():
         add_tracks_url, headers=headers, json={"uris": track_uris}
     )
 
-    return render_template("success.html")
+    return render_template("success.html", playlist_url=playlist["external_urls"]["spotify"])
 
 
 if __name__ == "__main__":
