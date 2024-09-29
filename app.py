@@ -73,7 +73,7 @@ def generate_playlist():
         "min_tempo": min_tempo,
         "max_tempo": max_tempo,
         "target_tempo": target_tempo,
-        "limit": max_num_songs,  # Fetch 10 recommended tracks
+        "limit": max_num_songs,
     }
 
     response = requests.get(recommendations_url, headers=headers, params=params)
@@ -89,12 +89,16 @@ def generate_playlist():
         "public": False,
     }
 
-    playlist_response = requests.post(
+    playlist_creation_response = requests.post(
         f"{SPOTIFY_API_URL}/users/{user_id}/playlists",
         headers=headers,
         json=playlist_data,
     )
-    playlist = playlist_response.json()
+
+    if playlist_creation_response.status_code != 201:
+        return "Something went wrong. Please try again."
+
+    playlist = playlist_creation_response.json()
 
     add_tracks_url = f"{SPOTIFY_API_URL}/playlists/{playlist['id']}/tracks"
 
