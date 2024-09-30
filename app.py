@@ -24,6 +24,12 @@ RECOMMENDATIONS_URL = f"{SPOTIFY_API_URL}/recommendations"
 CLIENT_AUTH_URL = f"{SPOTIFY_AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPE}"
 
 
+class SpotifyAPIError(Exception):
+    def __init__(self, message, status_code):
+        super().__init__(message)
+        self.status_code = status_code
+
+
 @app.route("/")
 def home():
     if "access_token" not in session:
@@ -91,38 +97,46 @@ def construct_recommendations_params(form):
     return params
 
 
-@app.route("/generate_playlist", methods=["POST"])
-def generate_playlist():
-    access_token = session.get("access_token")
-
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
-    }
-
-    # prepare the recommendations
-    recommendations_params = construct_recommendations_params(request.form)
+def get_recommended_tracks(headers, recommendations_params):
     response = requests.get(
         RECOMMENDATIONS_URL, headers=headers, params=recommendations_params, timeout=5
     )
 
     if response.status_code != 200:
-        return f"Something went wrong on Spotify's side:\nCode: {response.status_code}\nMessage: {response.text}"
+        raise SpotifyAPIError(
+            f"Something went wrong on Spotify's side:\nCode: {response.status_code}\nMessage: {response.text}",
+            response.status_code,
+        )
 
     recommendations = response.json()
-    track_uris = [track["uri"] for track in recommendations["tracks"]]
+    recommended_track_uris = [track["uri"] for track in recommendations["tracks"]]
+    return recommended_track_uris
 
-    # prepare the playlist
+
+def get_current_user_id(headers):
+    user_profile_response = requests.get(
+        f"{SPOTIFY_API_URL}/me", headers=headers, timeout=5
+    )
+
+    if user_profile_response.status_code != 200:
+        raise SpotifyAPIError(
+            f"Something went wrong on Spotify's side:\nCode: {user_profile_response.status_code}\nMessage: {user_profile_response.text}",
+            user_profile_response.status_code,
+        )
+
+    user_profile = user_profile_response.json()
+    user_id = user_profile["id"]
+    return user_id
+
+
+def create_playlist(headers, genres_metadata, tempo_metadata):
     playlist_data = {
-        "name": f"Generated Playlist: {recommendations_params['seed_genres']} - Tempo {recommendations_params['target_tempo']} BPM",
-        "description": f"A playlist with songs around {recommendations_params['target_tempo']} BPM",
+        "name": f"Generated Playlist: {genres_metadata} - Tempo {tempo_metadata} BPM",
+        "description": f"A playlist with songs around {tempo_metadata} BPM",
         "public": False,
     }
 
-    user_profile = requests.get(
-        f"{SPOTIFY_API_URL}/me", headers=headers, timeout=5
-    ).json()
-    user_id = user_profile["id"]
+    user_id = get_current_user_id(headers)
 
     playlist_creation_response = requests.post(
         f"{SPOTIFY_API_URL}/users/{user_id}/playlists",
@@ -132,16 +146,49 @@ def generate_playlist():
     )
 
     if playlist_creation_response.status_code != 201:
-        return "Something went wrong. Please try again."
+        raise SpotifyAPIError(
+            f"Something went wrong on Spotify's side:\nCode: {playlist_creation_response.status_code}\nMessage: {playlist_creation_response.text}",
+            playlist_creation_response.status_code,
+        )
 
     playlist = playlist_creation_response.json()
+    return playlist
 
-    # fill the playlist with the recommendations
+
+def add_tracks(headers, track_uris, playlist):
     add_tracks_url = f"{SPOTIFY_API_URL}/playlists/{playlist['id']}/tracks"
-
-    _add_tracks_response = requests.post(
+    add_tracks_response = requests.post(
         add_tracks_url, headers=headers, json={"uris": track_uris}, timeout=5
     )
+    if add_tracks_response.status_code != 201:
+        raise SpotifyAPIError(
+            f"Something went wrong on Spotify's side:\nCode: {add_tracks_response.status_code}\nMessage: {add_tracks_response.text}",
+            add_tracks_response.status_code,
+        )
+
+
+@app.route("/generate_playlist", methods=["POST"])
+def generate_playlist():
+    access_token = session.get("access_token")
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    recommendations_params = construct_recommendations_params(request.form)
+
+    try:
+        track_uris = get_recommended_tracks(headers, recommendations_params)
+
+        playlist = create_playlist(
+            headers,
+            genres_metadata=recommendations_params["seed_genres"],
+            tempo_metadata=recommendations_params["target_tempo"],
+        )
+
+        add_tracks(headers, track_uris, playlist)
+    except SpotifyAPIError as e:
+        return str(e), e.status_code
 
     return render_template(
         "success.html", playlist_url=playlist["external_urls"]["spotify"]
