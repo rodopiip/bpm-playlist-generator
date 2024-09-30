@@ -180,6 +180,7 @@ def generate_playlist():
             genres_metadata=recommendations_params["seed_genres"],
             tempo_metadata=recommendations_params["target_tempo"],
         )
+        
         add_tracks(headers, track_uris, playlist)
     except SpotifyAPIError as e:
         return str(e), e.status_code
