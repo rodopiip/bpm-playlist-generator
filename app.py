@@ -113,13 +113,7 @@ def get_recommended_tracks(headers, recommendations_params):
     return recommended_track_uris
 
 
-def create_playlist(headers, genres_metadata, tempo_metadata):
-    playlist_data = {
-        "name": f"Generated Playlist: {genres_metadata} - Tempo {tempo_metadata} BPM",
-        "description": f"A playlist with songs around {tempo_metadata} BPM",
-        "public": False,
-    }
-
+def get_current_user_id(headers):
     user_profile_response = requests.get(
         f"{SPOTIFY_API_URL}/me", headers=headers, timeout=5
     )
@@ -132,6 +126,17 @@ def create_playlist(headers, genres_metadata, tempo_metadata):
 
     user_profile = user_profile_response.json()
     user_id = user_profile["id"]
+    return user_id
+
+
+def create_playlist(headers, genres_metadata, tempo_metadata):
+    playlist_data = {
+        "name": f"Generated Playlist: {genres_metadata} - Tempo {tempo_metadata} BPM",
+        "description": f"A playlist with songs around {tempo_metadata} BPM",
+        "public": False,
+    }
+
+    user_id = get_current_user_id(headers)
 
     playlist_creation_response = requests.post(
         f"{SPOTIFY_API_URL}/users/{user_id}/playlists",
@@ -180,7 +185,7 @@ def generate_playlist():
             genres_metadata=recommendations_params["seed_genres"],
             tempo_metadata=recommendations_params["target_tempo"],
         )
-        
+
         add_tracks(headers, track_uris, playlist)
     except SpotifyAPIError as e:
         return str(e), e.status_code
