@@ -105,6 +105,10 @@ def generate_playlist():
     response = requests.get(
         RECOMMENDATIONS_URL, headers=headers, params=recommendations_params, timeout=5
     )
+
+    if response.status_code != 200:
+        return f"Something went wrong on Spotify's side:\nCode: {response.status_code}\nMessage: {response.text}"
+
     recommendations = response.json()
     track_uris = [track["uri"] for track in recommendations["tracks"]]
 
