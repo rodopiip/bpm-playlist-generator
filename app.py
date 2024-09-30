@@ -120,15 +120,17 @@ def create_playlist(headers, genres_metadata, tempo_metadata):
         "public": False,
     }
 
-    user_profile = requests.get(f"{SPOTIFY_API_URL}/me", headers=headers, timeout=5)
+    user_profile_response = requests.get(
+        f"{SPOTIFY_API_URL}/me", headers=headers, timeout=5
+    )
 
-    if user_profile.status_code != 200:
+    if user_profile_response.status_code != 200:
         raise SpotifyAPIError(
-            f"Something went wrong on Spotify's side:\nCode: {user_profile.status_code}\nMessage: {user_profile.text}",
-            user_profile.status_code,
+            f"Something went wrong on Spotify's side:\nCode: {user_profile_response.status_code}\nMessage: {user_profile_response.text}",
+            user_profile_response.status_code,
         )
 
-    user_profile = user_profile.json()
+    user_profile = user_profile_response.json()
     user_id = user_profile["id"]
 
     playlist_creation_response = requests.post(
