@@ -2,13 +2,20 @@ import os
 
 import requests
 from flask import Flask, redirect, render_template, request, session, url_for
+from get_docker_secret import get_docker_secret
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
-CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
-REDIRECT_URI = os.environ.get("SPOTIFY_REDIRECT_URI")
+CLIENT_ID = get_docker_secret(
+    "spotify_client_id", autocast_name=True, getenv=True, safe=False
+)
+CLIENT_SECRET = get_docker_secret(
+    "spotify_client_secret", autocast_name=True, getenv=True, safe=False
+)
+
+# hard  crash if REDIRECT_URI is not set
+REDIRECT_URI = os.environ["SPOTIFY_REDIRECT_URI"]
 SCOPE = "playlist-modify-public playlist-modify-private"
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
