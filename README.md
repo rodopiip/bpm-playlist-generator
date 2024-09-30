@@ -56,7 +56,7 @@ docker run -p 8888:8888 \
 -e SPOTIFY_CLIENT_ID="<CLIENT_ID>" \
 -e SPOTIFY_CLIENT_SECRET="<CLIENT_SECRET>" \
 -e SPOTIFY_REDIRECT_URI="<CALLBACK_URI>" \
--d --restart unless-stopped ghcr.io/vasilvas99/bpm-playlist-generator/bpm-playlist-generator:latest
+-it ghcr.io/vasilvas99/bpm-playlist-generator/bpm-playlist-generator:latest
 ```
 
 ## Contributors
