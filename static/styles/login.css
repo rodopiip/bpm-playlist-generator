@@ -21,6 +21,11 @@ body {
     font-size: 6rem;
     margin-bottom: 1rem;
 }
+@media only screen and (max-width: 768px) {
+    .title {
+        font-size: 4rem;
+    }
+}
 
 .btn-primary {
     padding: 1rem  2rem;
