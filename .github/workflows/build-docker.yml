@@ -27,9 +27,6 @@ jobs:
     - name: Push Docker image
       run: docker push ghcr.io/${{ github.repository }}/bpm-playlist-generator:latest
   
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
     - name: Kill current container instance
       uses: appleboy/ssh-action@v1.1.0
       with:
