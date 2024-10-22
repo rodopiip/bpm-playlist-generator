@@ -1,0 +1,17 @@
+name: Deploy on server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Remove old container instance
+      uses: appleboy/ssh-action@v1.1.0
+      with:
+        host: ${{ secrets.SERVER_URI }}
+        username: ${{ secrets.SERVER_URI }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: ${{ secrets.SERVER_USER }}
+        script: echo ${{ secrets.SERVER_USER }} | sudo -S whoami
