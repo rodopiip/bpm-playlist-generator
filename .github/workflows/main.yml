@@ -13,5 +13,5 @@ jobs:
         host: ${{ secrets.SERVER_URI }}
         username: ${{ secrets.SERVER_URI }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        port: ${{ secrets.SERVER_USER }}
+        port: ${{ secrets.SERVER_PORT }}
         script: echo ${{ secrets.SERVER_USER }} | sudo -S whoami
