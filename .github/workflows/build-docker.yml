@@ -9,7 +9,7 @@ on:
 env:
   CTR_REGISTRY: ghcr.io
   IMAGE_REF: bpm-playlist-generator:latest
-  DOCKER_IMAGE: ${{ env.CTR_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_REF }}
+  DOCKER_IMAGE: $CTR_REGISTRY/${{ github.repository }}/$IMAGE_REF
 
 jobs:
   build:
