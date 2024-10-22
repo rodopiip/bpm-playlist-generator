@@ -34,7 +34,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
-        script: ID=$(docker ps --all --filter=ancestor=ghcr.io/vasilvas99/bpm-playlist-generator/bpm-playlist-generator:latest --format {{.ID}}); docker kill $ID
+        script: ID=$(docker ps --all --filter=ancestor=ghcr.io/vasilvas99/bpm-playlist-generator/bpm-playlist-generator:latest --format {{.ID}}); docker kill $ID; docker rm $ID;
     
     - name: Remove old image with latest tag
       uses: appleboy/ssh-action@v1.1.0
