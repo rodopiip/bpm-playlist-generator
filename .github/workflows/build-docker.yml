@@ -9,7 +9,6 @@ on:
 env:
   CTR_REGISTRY: ghcr.io
   IMAGE_REF: bpm-playlist-generator:latest
-  DOCKER_IMAGE: ghcr.io/${{ github.repository }}/bpm-playlist-generator:latest
 
 jobs:
   build:
@@ -27,10 +26,10 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build Docker image
-      run: docker build . -t ${{ env.DOCKER_IMAGE }}
+      run: docker build . -t ${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}}
 
     - name: Push Docker image
-      run: docker push ${{ env.DOCKER_IMAGE }}
+      run: docker push ${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}}
   
     - name: Kill current container instance
       uses: appleboy/ssh-action@v1.1.0
@@ -39,7 +38,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
-        script: ID=$(docker ps --all --filter=ancestor=${{ env.DOCKER_IMAGE }} --format {{.ID}}); [ -n "$ID" ] && docker kill $ID && docker rm $ID || exit 0;
+        script: ID=$(docker ps --all --filter=ancestor=${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}} --format {{.ID}}); [ -n "$ID" ] && docker kill $ID && docker rm $ID || exit 0;
     
     - name: Remove old image with latest tag
       uses: appleboy/ssh-action@v1.1.0
@@ -48,7 +47,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
-        script: docker image rm ${{ env.DOCKER_IMAGE }} --force
+        script: docker image rm ${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}} --force
 
     - name: Deploy new instance
       uses: appleboy/ssh-action@v1.1.0
@@ -57,4 +56,4 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
-        script: docker run -p 8888:8888 -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} -e SPOTIFY_REDIRECT_URI=${{ secrets.SPOTIFY_REDIRECT_URI }} -d --restart unless-stopped ${{ env.DOCKER_IMAGE }}
+        script: docker run -p 8888:8888 -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} -e SPOTIFY_REDIRECT_URI=${{ secrets.SPOTIFY_REDIRECT_URI }} -d --restart unless-stopped ${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}}
