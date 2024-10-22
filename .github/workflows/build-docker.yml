@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: ghcr.io/${{ github.repository }}/bpm-playlist-generator:latest
+  CTR_REGISTRY: ghcr.io
+  IMAGE_REF: bpm-playlist-generator:latest
+  DOCKER_IMAGE: ${{ env.CTR_REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_REF }}
 
 jobs:
   build:
@@ -20,7 +22,7 @@ jobs:
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v3
       with:
-        registry: ghcr.io
+        registry: ${{ env.CTR_REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
