@@ -64,11 +64,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy-docker
     steps:
-    - name: Kill current container instance
+    - name: Update Caddyfile
       uses: appleboy/ssh-action@v1.1.0
       with:
         host: ${{ secrets.SERVER_URI }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
-        script: echo ${{secrets.SERVER_PASSWORD}} | sudo -S whoami
+        script: |
+          echo ${{ secrets.SERVER_PASSWORD }} | sudo -S bash -c 'echo "${{ secrets.SERVER_URI }} {
+            tls ${{ secrets.SSL_EMAIL }}
+            reverse_proxy localhost:8888
+          }" > /etc/caddy/Caddyfile'
+          
+    - name: Restart Caddy service
+      uses: appleboy/ssh-action@v1.1.0
+      with:
+        host: ${{ secrets.SERVER_URI }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: ${{ secrets.SERVER_PORT }}
+        script: echo ${{ secrets.SERVER_PASSWORD }} | sudo -S systemctl restart caddy
+          
+          
