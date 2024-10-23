@@ -1,9 +1,11 @@
 name: CI job to build and deploy Docker image on server
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  workflow_call:
-
+ 
 env:
   CTR_REGISTRY: ghcr.io
   IMAGE_REF: bpm-playlist-generator:latest
