@@ -1,10 +1,8 @@
-name: Build and Deploy Docker Image
+name: CI job to build and deploy Docker image on server
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+  workflow_call:
 
 env:
   CTR_REGISTRY: ghcr.io
@@ -30,7 +28,11 @@ jobs:
 
     - name: Push Docker image
       run: docker push ${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}}
-  
+
+  deploy-docker:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
     - name: Kill current container instance
       uses: appleboy/ssh-action@v1.1.0
       with:
@@ -57,3 +59,17 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
         script: docker run -p 8888:8888 -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} -e SPOTIFY_REDIRECT_URI=${{ secrets.SPOTIFY_REDIRECT_URI }} -d --restart unless-stopped ${{ env.CTR_REGISTRY}}/${{ github.repository }}/${{ env.IMAGE_REF}}
+      
+    deploy-caddy-config:
+      runs-on: ubuntu-latest
+      needs: deploy-docker
+      steps:
+        - name: Deploy config
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_URI }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            echo ${{secrets.SERVER_USER}} | sudo -S whoami
