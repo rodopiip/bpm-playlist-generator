@@ -25,16 +25,25 @@ CLIENT_AUTH_URL = f"{SPOTIFY_AUTH_URL}?response_type=code&client_id={CLIENT_ID}&
 
 
 class SpotifyAPIError(Exception):
-    def __init__(self, message, status_code):
+    def __init__(self, status_code, message, nice_message=None):
         super().__init__(message)
+        self.error_message = message
         self.status_code = status_code
+        self.nice_message = nice_message
+
+    @staticmethod
+    def from_response(response, nice_message=None):
+        response_error = response.json()["error"]
+        return SpotifyAPIError(
+            response_error["status"], response_error["message"], nice_message
+        )
 
 
 @app.route("/")
 def home():
     if "access_token" not in session:
-        return render_template("login.html")
-    return render_template("form.html")
+        return render_template("login.j2")
+    return render_template("form.j2")
 
 
 @app.route("/login")
@@ -103,13 +112,16 @@ def get_recommended_tracks(headers, recommendations_params):
     )
 
     if response.status_code != 200:
-        raise SpotifyAPIError(
-            f"Something went wrong on Spotify's side:\nCode: {response.status_code}\nMessage: {response.text}",
-            response.status_code,
-        )
+        raise SpotifyAPIError.from_response(response)
 
     recommendations = response.json()
     recommended_track_uris = [track["uri"] for track in recommendations["tracks"]]
+
+    if not recommended_track_uris:
+        raise SpotifyAPIError(
+            404, "No tracks found", "No tracks found for the given parameters"
+        )
+
     return recommended_track_uris
 
 
@@ -119,10 +131,7 @@ def get_current_user_id(headers):
     )
 
     if user_profile_response.status_code != 200:
-        raise SpotifyAPIError(
-            f"Something went wrong on Spotify's side:\nCode: {user_profile_response.status_code}\nMessage: {user_profile_response.text}",
-            user_profile_response.status_code,
-        )
+        raise SpotifyAPIError.from_response(user_profile_response)
 
     user_profile = user_profile_response.json()
     user_id = user_profile["id"]
@@ -146,10 +155,7 @@ def create_playlist(headers, genres_metadata, tempo_metadata):
     )
 
     if playlist_creation_response.status_code != 201:
-        raise SpotifyAPIError(
-            f"Something went wrong on Spotify's side:\nCode: {playlist_creation_response.status_code}\nMessage: {playlist_creation_response.text}",
-            playlist_creation_response.status_code,
-        )
+        raise SpotifyAPIError.from_response(playlist_creation_response)
 
     playlist = playlist_creation_response.json()
     return playlist
@@ -161,10 +167,7 @@ def add_tracks(headers, track_uris, playlist):
         add_tracks_url, headers=headers, json={"uris": track_uris}, timeout=5
     )
     if add_tracks_response.status_code != 201:
-        raise SpotifyAPIError(
-            f"Something went wrong on Spotify's side:\nCode: {add_tracks_response.status_code}\nMessage: {add_tracks_response.text}",
-            add_tracks_response.status_code,
-        )
+        raise SpotifyAPIError.from_response(add_tracks_response)
 
 
 @app.route("/generate_playlist", methods=["POST"])
@@ -188,10 +191,18 @@ def generate_playlist():
 
         add_tracks(headers, track_uris, playlist)
     except SpotifyAPIError as e:
-        return str(e), e.status_code
+        return (
+            render_template(
+                "error.j2",
+                error_message=e.error_message,
+                error_code=e.status_code,
+                nice_message=e.nice_message,
+            ),
+            e.status_code,
+        )
 
     return render_template(
-        "success.html", playlist_url=playlist["external_urls"]["spotify"]
+        "success.j2", playlist_url=playlist["external_urls"]["spotify"]
     )
 
 
