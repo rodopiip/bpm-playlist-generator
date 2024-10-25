@@ -195,7 +195,7 @@ def generate_playlist():
             render_template(
                 "error.j2",
                 error_message=e.error_message,
-                error_code=e.status_code,
+                error_code=e.status_code.capitalize(),
                 nice_message=e.nice_message,
             ),
             e.status_code,
