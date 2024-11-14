@@ -1,5 +1,7 @@
 # Spotify BPM playlist generator
 
+Live version at [https://bpm-playlist.severely.online/](https://bpm-playlist.severely.online/)
+
 A simple Flask App that generates you a Spotify playlist based on prefered BPM (min-max-target) and a [genre seed](https://gist.github.com/drumnation/91a789da6f17f2ee20db8f55382b6653#file-genre-seeds-json)
 
 ![image](https://github.com/user-attachments/assets/a2296fb4-5910-4d3d-9b2d-643903e4a5d0)
