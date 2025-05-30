@@ -6,6 +6,13 @@ A simple Flask App that generates you a Spotify playlist based on prefered BPM (
 
 ![image](https://github.com/user-attachments/assets/a2296fb4-5910-4d3d-9b2d-643903e4a5d0)
 
+## Tech Stack
+
+- Python/Flask
+- HTML/CSS
+- Docker
+- GitHub Workflows
+
 ## Dependencies
 
 All necessary dependencies can be installed with:
